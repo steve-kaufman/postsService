@@ -1,4 +1,4 @@
-module postsService
+module github.com/steve-kaufman/postsService
 
 go 1.16
 

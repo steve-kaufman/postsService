@@ -1,4 +1,4 @@
-package postsService
+package service
 
 import "errors"
 

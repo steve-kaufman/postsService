@@ -1,4 +1,4 @@
-package postsService
+package service
 
 type Post struct {
 	ID       int

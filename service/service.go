@@ -1,4 +1,4 @@
-package postsService
+package service
 
 func GetAll(getter PostsGetter) ([]Post, error) {
 	posts, err := getter.GetPosts()

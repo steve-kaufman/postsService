@@ -1,4 +1,4 @@
-package postsService
+package service
 
 type PostsGetter interface {
 	GetPosts() ([]Post, error)
