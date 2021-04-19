@@ -62,6 +62,24 @@ func (repo SqliteRepo) SavePost(post service.Post) error {
 	return err
 }
 
+func (repo SqliteRepo) DeletePost(id int) error {
+	_, err := repo.conn.Exec("DELETE FROM posts WHERE id=?", id)
+	return err
+}
+
+func (repo SqliteRepo) UpdatePost(id int, data service.Post) error {
+	if _, err := repo.GetPost(id); err != nil {
+		return err
+	}
+	_, err := repo.conn.Exec(`UPDATE posts SET
+		title = ?,
+		content = ?,
+		likes = ?,
+		dislikes = ?
+	`, data.Title, data.Content, data.Likes, data.Dislikes)
+	return err
+}
+
 func mapRowsToPosts(rows *sql.Rows) ([]service.Post, error) {
 	posts := []service.Post{}
 	for rows.Next() {
