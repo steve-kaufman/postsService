@@ -8,7 +8,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/steve-kaufman/postsService/db"
-	"github.com/steve-kaufman/postsService/service"
+	"github.com/steve-kaufman/postsService/entities"
+	"github.com/steve-kaufman/postsService/useCases"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -54,7 +55,7 @@ func TestAfterInstantiatingRepo_CanInsertPost(t *testing.T) {
 	}
 }
 
-var examplePosts = []service.Post{
+var examplePosts = []entities.Post{
 	{
 		ID:       1,
 		Title:    "Post 1",
@@ -100,7 +101,7 @@ func TestGetPost_ReturnsNotFound_IfNoMatch(t *testing.T) {
 
 	_, err := repo.GetPost(4)
 
-	if err != service.ErrNotFound {
+	if err != useCases.ErrNotFound {
 		t.Fatalf("Expected ErrNotFound; Got: '%v'", err)
 	}
 }
@@ -126,7 +127,7 @@ func TestSavePost_InsertsPostInDB(t *testing.T) {
 
 	insertExamplePosts(conn)
 
-	err := repo.SavePost(service.Post{
+	err := repo.SavePost(entities.Post{
 		Title:    "Foo",
 		Content:  "Bar",
 		Likes:    1,
@@ -137,11 +138,11 @@ func TestSavePost_InsertsPostInDB(t *testing.T) {
 		t.Fatalf("Expected no error; Got: '%v'", err)
 	}
 
-	var post service.Post
+	var post entities.Post
 	row := conn.QueryRow(`SELECT id, title, content, likes, dislikes FROM posts WHERE id=4`)
 	row.Scan(&post.ID, &post.Title, &post.Content, &post.Likes, &post.Dislikes)
 
-	expectedPost := service.Post{
+	expectedPost := entities.Post{
 		ID:       4,
 		Title:    "Foo",
 		Content:  "Bar",
@@ -163,7 +164,7 @@ func TestDeletePost_DeletesCorrectPost(t *testing.T) {
 		t.Fatalf("Expected no error; Got: '%v'", err)
 	}
 
-	if _, err := repo.GetPost(2); err != service.ErrNotFound {
+	if _, err := repo.GetPost(2); err != useCases.ErrNotFound {
 		t.Fatalf("Expected deleted post to not be found")
 	}
 
@@ -192,9 +193,9 @@ func TestUpdatePost_ReturnsNotFound_WithBadID(t *testing.T) {
 			repo, conn := setup()
 			insertExamplePosts(conn)
 
-			err := repo.UpdatePost(id, service.Post{Title: "Foo"})
+			err := repo.UpdatePost(id, entities.Post{Title: "Foo"})
 
-			if err != service.ErrNotFound {
+			if err != useCases.ErrNotFound {
 				t.Fatalf("Expected ErrNotFound; Got: '%v'", err)
 			}
 		})
@@ -219,7 +220,7 @@ func TestUpdatePost_UpdatesCorrectPost_WithData(t *testing.T) {
 				t.Fatalf("Expected no error; Got: '%v'", err)
 			}
 
-			var post service.Post
+			var post entities.Post
 			row := conn.QueryRow(`SELECT id, title, content, likes, dislikes FROM posts WHERE id=?`, id)
 			row.Scan(&post.ID, &post.Title, &post.Content, &post.Likes, &post.Dislikes)
 
@@ -230,7 +231,7 @@ func TestUpdatePost_UpdatesCorrectPost_WithData(t *testing.T) {
 	}
 }
 
-func insertPost(conn *sql.DB, post service.Post) {
+func insertPost(conn *sql.DB, post entities.Post) {
 	conn.Exec(`INSERT INTO posts (title, content, likes, dislikes) VALUES(?, ?, ?, ?);`,
 		post.Title,
 		post.Content,

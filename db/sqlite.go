@@ -4,7 +4,8 @@ import (
 	"database/sql"
 	"os"
 
-	"github.com/steve-kaufman/postsService/service"
+	"github.com/steve-kaufman/postsService/entities"
+	"github.com/steve-kaufman/postsService/useCases"
 )
 
 type SqliteRepo struct {
@@ -33,7 +34,7 @@ func NewSqliteRepo(path string) *SqliteRepo {
 	return repo
 }
 
-func (repo SqliteRepo) GetPosts() ([]service.Post, error) {
+func (repo SqliteRepo) GetPosts() ([]entities.Post, error) {
 	rows, err := repo.conn.Query(`SELECT id, title, content, likes, dislikes FROM posts;`)
 	if err != nil {
 		return nil, err
@@ -43,16 +44,16 @@ func (repo SqliteRepo) GetPosts() ([]service.Post, error) {
 	return mapRowsToPosts(rows)
 }
 
-func (repo SqliteRepo) GetPost(id int) (service.Post, error) {
+func (repo SqliteRepo) GetPost(id int) (entities.Post, error) {
 	row := repo.conn.QueryRow(`SELECT id, title, content, likes, dislikes FROM posts WHERE id=?`, id)
 	post, err := mapToPost(row)
 	if err == sql.ErrNoRows {
-		return service.Post{}, service.ErrNotFound
+		return entities.Post{}, useCases.ErrNotFound
 	}
 	return post, nil
 }
 
-func (repo SqliteRepo) SavePost(post service.Post) error {
+func (repo SqliteRepo) SavePost(post entities.Post) error {
 	_, err := repo.conn.Exec(`INSERT INTO posts (title, content, likes, dislikes) VALUES (?, ?, ?, ?);`,
 		post.Title,
 		post.Content,
@@ -67,7 +68,7 @@ func (repo SqliteRepo) DeletePost(id int) error {
 	return err
 }
 
-func (repo SqliteRepo) UpdatePost(id int, data service.Post) error {
+func (repo SqliteRepo) UpdatePost(id int, data entities.Post) error {
 	if _, err := repo.GetPost(id); err != nil {
 		return err
 	}
@@ -80,8 +81,8 @@ func (repo SqliteRepo) UpdatePost(id int, data service.Post) error {
 	return err
 }
 
-func mapRowsToPosts(rows *sql.Rows) ([]service.Post, error) {
-	posts := []service.Post{}
+func mapRowsToPosts(rows *sql.Rows) ([]entities.Post, error) {
+	posts := []entities.Post{}
 	for rows.Next() {
 		post, err := mapToPost(rows)
 		if err != nil {
@@ -96,11 +97,11 @@ type RowScanner interface {
 	Scan(dest ...interface{}) error
 }
 
-func mapToPost(row RowScanner) (service.Post, error) {
-	var post service.Post
+func mapToPost(row RowScanner) (entities.Post, error) {
+	var post entities.Post
 	err := row.Scan(&post.ID, &post.Title, &post.Content, &post.Likes, &post.Dislikes)
 	if err != nil {
-		return service.Post{}, err
+		return entities.Post{}, err
 	}
 	return post, nil
 }
